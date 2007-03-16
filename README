@@ -1,0 +1,32 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1828
+
+DESCRIPTION
+This is a poor man's revision control system, a primitive alternative to CVS,
+RCS, Subversion, etc., which works with no additional software and almost any
+file system. 
+The :WriteBackup command writes subsequent backups of the current file with a
+'current date + counter' file extension (format '.YYYYMMDD[a-z]'). The first
+backup of a day has letter 'a' appended, the next 'b', and so on. (So that a
+file can be backed up up to 26 times on any given day.) 
+
+By default, backups are created in the same directory as the original file,
+but they can also be placed in a directory relative to the original file, or
+in one common backup directory for all files (similar to Vim's 'backupdir'
+option), or even in a file-specific location that is determined via a
+user-provided callback function. 
+
+USAGE
+:WriteBackup[!]
+			Write the whole current buffer to the next available
+			backup file with a '.YYYYMMDD[a-z]' file extension. 
+			If the last backup is identical with the current
+			buffer contents, no (redundant) backup is written. 
+			With [!], creation of a new backup file is forced: 
+			- even if the last backup is identical
+			- even when no more backup versions (for this day) are
+			  available (the last '.YYYYMMDDz' backup gets
+			  overwritten, even if it is readonly)
+
+PS: In addition to this Vim script, I also provide the basic writebackup
+functionality outside of Vim as VBScript and Korn Shell script versions at
+http://ingo-karkat.de/downloads/tools/writebackup/index.html
