@@ -51,13 +51,15 @@
 "   define a shorter command alias ':W' in your .vimrc to save some keystrokes.
 "   I like the parallelism between ':w' for a normal write and ':W' for a backup
 "   write. 
-"	command W :WriteBackup
+"	command -bar W :WriteBackup
 "
-" Copyright: (C) 2007 by Ingo Karkat
+" Copyright: (C) 2007-2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"   1.20.006	13-Jun-2008	Added -bar to :WriteBackup, so that commands can
+"				be chained together. 
 "   1.20.005	18-Sep-2007	ENH: Added support for writing backup files into
 "				a different directory (either one static backup
 "				dir or relative to the original file) via
@@ -165,6 +167,6 @@ function! s:WriteBackup()
     endtry
 endfunction
 
-command! WriteBackup :call <SID>WriteBackup()
+command! -bar WriteBackup :call <SID>WriteBackup()
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
