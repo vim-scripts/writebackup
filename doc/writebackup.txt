@@ -1,4 +1,4 @@
-*writebackup.txt*      Write backups of current file with date file extension. 
+*writebackup.txt*       Write backups of current file with date file extension. 
 
 			WRITE BACKUP    by Ingo Karkat
 							  *writebackup.vim*
@@ -6,9 +6,6 @@ description			|WriteBackup-description|
 usage	    			|WriteBackup-usage|
 installation   			|WriteBackup-installation|
 configuration  			|WriteBackup-configuration|
-integration			|WriteBackup-integration|
-limitations			|WriteBackup-limitations|
-assumptions			|WriteBackup-assumptions|
 known problems			|WriteBackup-known-problems|
 todo				|WriteBackup-todo|
 history				|WriteBackup-history|
@@ -26,7 +23,7 @@ file can be backed up up to 26 times on any given day.)
 
 By default, backups are created in the same directory as the original file,
 but they can also be placed in a directory relative to the original file, or
-in one common backup directory for all files (similar to VIM's 'backupdir'
+in one common backup directory for all files (similar to Vim's 'backupdir'
 option), or even in a file-specific location that is determined via a
 user-provided callback function. 
 
@@ -44,24 +41,24 @@ USAGE							   *WriteBackup-usage*
 			  available (the last '.YYYYMMDDz' backup gets
 			  overwritten, even if it is readonly)
 
-PS: In addition to this VIM script, I also provide the basic writebackup
-functionality outside of VIM as VBScript and Korn Shell script versions at
+PS: In addition to this Vim script, I also provide the basic writebackup
+functionality outside of Vim as VBScript and Korn Shell script versions at
 http://ingo-karkat.de/downloads/tools/writebackup/index.html
 
 ==============================================================================
 INSTALLATION					    *WriteBackup-installation*
 
-This script is packaged as a|vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vba.gz package in VIM; otherwise, decompress
-the archive first, e.g. using WinZip. Inside VIM, install by sourcing the
-vimball or via the|:UseVimball|command. >
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
+vimball or via the |:UseVimball| command. >
     vim writebackup.vba.gz
     :so %
-To uninstall, use the|:RmVimball|command. 
+To uninstall, use the |:RmVimball| command. 
 
 DEPENDENCIES					    *WriteBackup-dependencies*
 
-- Requires VIM 7.0 or higher. 
+- Requires Vim 7.0 or higher. 
 - The writebackupVersionControl plugin (vimscript #1829) complements this
   script with addtional commands and enhances the :WriteBackup command with
   additional checks, but is not required. 
@@ -69,8 +66,8 @@ DEPENDENCIES					    *WriteBackup-dependencies*
 ==============================================================================
 CONFIGURATION					   *WriteBackup-configuration*
 
-For a permanent configuration, put the following commands into your|vimrc|file
-(see :help vimrc). 
+For a permanent configuration, put the following commands into your |vimrc|:
+
 						     *g:WriteBackup_BackupDir*
 To put backups into another directory, specify a backup directory via >
     let g:WriteBackup_BackupDir = 'D:\backups'
@@ -129,32 +126,26 @@ created. If you don't like this check, turn it off via: >
 <
 
 							   *WriteBackup-alias*
-In case you already have other custom VIM commands starting with W, you can
+In case you already have other custom Vim commands starting with W, you can
 define a shorter command alias ':W' in your vimrc to save some keystrokes. I
 like the parallelism between ':w' for a normal write and ':W' for a backup
 write. >
     command -bar -bang W :WriteBackup<bang>
 <
 ==============================================================================
-INTEGRATION					     WriteBackup-integration
+KNOWN PROBLEMS					  *WriteBackup-known-problems*
 
-==============================================================================
-LIMITATIONS					     WriteBackup-limitations
-
-==============================================================================
-ASSUMPTIONS					     WriteBackup-assumptions
-
-==============================================================================
-KNOWN PROBLEMS					  WriteBackup-known-problems
-
-==============================================================================
 TODO							    *WriteBackup-todo*
 
 ==============================================================================
 HISTORY							 *WriteBackup-history*
 
+2.10	27-May-2009
+Replaced simple filespec escaping with built-in fnameescape() function (or
+emulation for Vim 7.0 / 7.1) via escapings.vim wrapper.
+
 2.00	22-Feb-2009
-- Using separate autoload script to help speed up VIM startup. This is an
+- Using separate autoload script to help speed up Vim startup. This is an
   incompatible change that also requires the corresponding
   writebackupVersionControl plugin version. *** PLEASE UPDATE
   writebackupVersionControl (vimscript #1829), too, if you're using it ***
@@ -182,7 +173,7 @@ Split off documentation into separate help file. Now packaging as VimBall.
 - ENH: Added support for writing backup files into a different directory
   (either one static backup dir or relative to the original file) via
   g:writebackup_BackupDir configuration, as suggested by Vincent DiCarlo. 
-- Now requiring VIM 7.0 or later, because it's using lists. 
+- Now requiring Vim 7.0 or later, because it's using lists. 
 - BF: Special ex command characters ' \%#' must be escaped for ':w' command. 
 
 1.00	07-Mar-2007
@@ -193,7 +184,7 @@ Started development.
 
 ==============================================================================
 Copyright: (C) 2007-2009 by Ingo Karkat
-The VIM LICENSE applies to this script; see|copyright|. 
+The VIM LICENSE applies to this script; see |copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
 ==============================================================================
