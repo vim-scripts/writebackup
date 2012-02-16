@@ -3,12 +3,21 @@
 " DEPENDENCIES:
 "   - escapings.vim autoload script. 
 "
-" Copyright: (C) 2007-2009 by Ingo Karkat
+" Copyright: (C) 2007-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   3.00.007	14-Feb-2012	ENH: New "redate" option for
+"				g:WriteBackup_AvoidIdenticalBackups that renames
+"				an identical backup from an earlier date to be
+"				the first backup of today. 
+"   			    	Change return value of
+"				writebackupVersionControl#IsIdenticalWithPredecessor()
+"				from predecessor version to full filespec. 
+"   2.11.006	23-Feb-2010	Using :keepalt instead of a temporary
+"				:set cpo-=A. 
 "   2.10.005	27-May-2009	Replaced simple filespec escaping with
 "				built-in fnameescape() function (or emulation
 "				for Vim 7.0 / 7.1) via escapings.vim wrapper. 
@@ -145,6 +154,39 @@ function! writebackup#GetBackupFilename( originalFilespec, isForced )
     endif
 endfunction
 
+function! writebackup#ShouldRedateIdenticalBackup( backupFilespec )
+    let l:backupNr = strpart(a:backupFilespec, len(a:backupFilespec) - 1)
+    return (l:backupNr ==# 'a')
+endfunction
+function! writebackup#Redate( identicalPredecessorFilespec, backupFilespec )
+"******************************************************************************
+"* PURPOSE:
+"   Rename the earlier identical predecessor to today's first backup. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   Renames a:identicalPredecessorFilespec to a:backupFilespec. 
+"* INPUTS:
+"   a:identicalPredecessorFilespec  Existing backup file. 
+"   a:backupFilespec		    Next available backup filespec. 
+"* RETURN VALUES: 
+"   None. 
+"   Throws 'WriteBackup: Failed to redate '<version>' as '<version>''. 
+"******************************************************************************
+    let l:identicalPredecessorVersion = writebackupVersionControl#GetVersion(a:identicalPredecessorFilespec)
+    if rename(a:identicalPredecessorFilespec, a:backupFilespec) == 0
+	echomsg printf("This file was already backed up as '%s'; redated as '%s'",
+	\	l:identicalPredecessorVersion,
+	\	writebackupVersionControl#GetVersion(a:backupFilespec)
+	\)
+    else
+	throw printf("WriteBackup: Failed to redate '%s' as '%s'",
+	\	l:identicalPredecessorVersion,
+	\	writebackupVersionControl#GetVersion(a:backupFilespec)
+	\)
+    endif
+endfunction
+
 function! writebackup#WriteBackup( isForced )
 "*******************************************************************************
 "* PURPOSE:
@@ -164,15 +206,14 @@ function! writebackup#WriteBackup( isForced )
 "* RETURN VALUES: 
 "   None. 
 "*******************************************************************************
-    let l:saved_cpo = &cpo
-    set cpo-=A
     try
 	let l:originalFilespec = expand('%')
 	let l:isNeedToCheckForIdenticalPredecessorAfterBackup = 0
 	if s:ExistsWriteBackupVersionControlPlugin()
 	    if ! writebackupVersionControl#IsOriginalFile(l:originalFilespec)
 		throw 'WriteBackup: You can only backup the latest file version, not a backup file itself!'
-	    elseif g:WriteBackup_AvoidIdenticalBackups && ! a:isForced
+	    elseif ! a:isForced && g:WriteBackup_AvoidIdenticalBackups !=# '0'
+		" Identical backups are to be avoided. 
 		if &l:modified
 		    " The current buffer is modified; we can only check for an
 		    " identical backup after the buffer has been written. 
@@ -181,22 +222,50 @@ function! writebackup#WriteBackup( isForced )
 		    " As the current buffer isn't modified, we just need to compare
 		    " the saved buffer contents with the last backup (if that
 		    " exists). 
-		    let l:currentBackupVersion = writebackupVersionControl#IsIdenticalWithPredecessor(l:originalFilespec)
-		    if ! empty(l:currentBackupVersion)
-			throw printf("WriteBackup: This file is already backed up as '%s'", l:currentBackupVersion)
+		    let l:identicalPredecessorFilespec = writebackupVersionControl#IsIdenticalWithPredecessor(l:originalFilespec)
+		    if ! empty(l:identicalPredecessorFilespec)
+			if g:WriteBackup_AvoidIdenticalBackups ==# 'redate'
+			    let l:backupFilespec = writebackup#GetBackupFilename(l:originalFilespec, 0)
+			    if writebackup#ShouldRedateIdenticalBackup(l:backupFilespec)
+				" This would be today's first backup, but an
+				" earlier identical backup exists, so just
+				" rename that to represent today's first backup. 
+				call writebackup#Redate(l:identicalPredecessorFilespec, l:backupFilespec)
+				return
+			    endif
+			endif
+
+			let l:identicalPredecessorVersion = writebackupVersionControl#GetVersion(l:identicalPredecessorFilespec)
+			throw printf("WriteBackup: This file is already backed up as '%s'", l:identicalPredecessorVersion)
 		    endif
 		endif
 	    endif
 	endif
 
-	let l:backupFilespec = writebackup#GetBackupFilename(l:originalFilespec, a:isForced)
+	" Perform the backup. 
+	if ! exists('l:backupFilespec') | let l:backupFilespec = writebackup#GetBackupFilename(l:originalFilespec, a:isForced) | endif
 	let l:backupExFilespec = escapings#fnameescape(l:backupFilespec)
-	execute 'write' . (a:isForced ? '!' : '')  l:backupExFilespec
+	execute 'keepalt write' . (a:isForced ? '!' : '')  l:backupExFilespec
 
 	if l:isNeedToCheckForIdenticalPredecessorAfterBackup
-	    let l:identicalPredecessorVersion = writebackupVersionControl#IsIdenticalWithPredecessor(l:backupFilespec)
-	    if ! empty(l:identicalPredecessorVersion)
-		call writebackupVersionControl#DeleteBackup(l:backupFilespec, 0)
+	    let l:identicalPredecessorFilespec = writebackupVersionControl#IsIdenticalWithPredecessor(l:backupFilespec)
+	    if ! empty(l:identicalPredecessorFilespec)
+		let l:identicalPredecessorVersion = writebackupVersionControl#GetVersion(l:identicalPredecessorFilespec)
+		if g:WriteBackup_AvoidIdenticalBackups ==# 'redate'
+		    if writebackup#ShouldRedateIdenticalBackup(l:backupFilespec)
+			" This was today's first backup, and an earlier
+			" identical backup exists, so remove the earlier
+			" identical backup. 
+			call writebackupVersionControl#DeleteBackup(l:identicalPredecessorFilespec, 1) " Try deleting a read-only predecessor, as no information will be lost. If this should fail, we'll get an exception. 
+			echomsg printf("This file was already backed up as '%s'; redated as '%s'",
+			\   l:identicalPredecessorVersion,
+			\   writebackupVersionControl#GetVersion(l:backupFilespec)
+			\)
+			return
+		    endif
+		endif
+
+		call writebackupVersionControl#DeleteBackup(l:backupFilespec, 1)    " This backup was just created, it's unlikely that it's readonly. 
 		throw printf("WriteBackup: This file is already backed up as '%s'", l:identicalPredecessorVersion)
 	    endif
 	endif
@@ -210,9 +279,7 @@ function! writebackup#WriteBackup( isForced )
 	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
 	echomsg v:errmsg
 	echohl None
-    finally
-	let &cpo = l:saved_cpo
     endtry
 endfunction
 
-" vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
+" vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

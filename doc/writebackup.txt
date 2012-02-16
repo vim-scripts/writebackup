@@ -3,9 +3,9 @@
 			WRITE BACKUP    by Ingo Karkat
 							  *writebackup.vim*
 description			|WriteBackup-description|
-usage	    			|WriteBackup-usage|
-installation   			|WriteBackup-installation|
-configuration  			|WriteBackup-configuration|
+usage				|WriteBackup-usage|
+installation			|WriteBackup-installation|
+configuration			|WriteBackup-configuration|
 known problems			|WriteBackup-known-problems|
 todo				|WriteBackup-todo|
 history				|WriteBackup-history|
@@ -27,6 +27,20 @@ in one common backup directory for all files (similar to Vim's 'backupdir'
 option), or even in a file-specific location that is determined via a
 user-provided callback function. 
 
+RELATED WORKS								     *
+
+- The |writebackupVersionControl.vim| plugin (vimscript #1829) complements
+  this script with additional commands and enhances the :WriteBackup command
+  with more checks, but is not required. 
+- The |writebackupToAdjacentDir.vim| plugin (vimscript #3107) implements a
+  |WriteBackup-dynamic-backupdir| configuration that puts the backup files in
+  an adjacent backup directory if one exists. This helps where the backups
+  cannot be placed into the same directory. 
+- The |writebackupAutomator.vim| plugin (vimscript #3940) automatically writes
+  a backup on a day's first write of a file that was backed up in the past,
+  but not yet today. It can be your safety net when you forget to make a
+  backup. 
+
 ==============================================================================
 USAGE							   *WriteBackup-usage*
 								*:WriteBackup*
@@ -41,8 +55,8 @@ USAGE							   *WriteBackup-usage*
 			  available (the last '.YYYYMMDDz' backup gets
 			  overwritten, even if it is readonly)
 
-PS: In addition to this Vim script, I also provide the basic writebackup
-functionality outside of Vim as VBScript and Korn Shell script versions at
+PS: In addition to this Vim plugin, I also provide the basic writebackup
+functionality outside of Vim as VBScript and Bash Shell script versions at
 http://ingo-karkat.de/downloads/tools/writebackup/index.html
 
 ==============================================================================
@@ -59,9 +73,9 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					    *WriteBackup-dependencies*
 
 - Requires Vim 7.0 or higher. 
-- The writebackupVersionControl plugin (vimscript #1829) complements this
-  script with addtional commands and enhances the :WriteBackup command with
-  additional checks, but is not required. 
+- The |writebackupVersionControl.vim| plugin (vimscript #1829) complements
+  this script with additional commands and enhances the :WriteBackup command
+  with more checks, but is not required. 
 
 ==============================================================================
 CONFIGURATION					   *WriteBackup-configuration*
@@ -121,9 +135,18 @@ variable, which can be set by an autocmd, ftplugin, or manually: >
 If the writebackupVersionControl plugin is installed, no backup is written if
 there is an identical predecessor, so you don't need to remember whether
 you've already backed up the current file; no redundant backups will be
-created. If you don't like this check, turn it off via: >
+created. 
+If you don't like this check, turn it off via: >
     let g:WriteBackup_AvoidIdenticalBackups = 0
-<
+It occasionally happens that an identical backup is kept lying around, e.g.
+when reverting to the backup without removing it. Since that backup would
+misleadingly date the next change much earlier than it actually happened,
+writebackup automatically renames the earlier backup if it would be identical
+to the first backup created today. 
+If you don't want such an automatic rename and instead get the "is already
+backed up" error, turn off redate via: >
+    let g:WriteBackup_AvoidIdenticalBackups = 1
+This reinstates the old behavior of writebackup versions < 3.00.  
 
 							   *WriteBackup-alias*
 In case you already have other custom Vim commands starting with W, you can
@@ -139,6 +162,13 @@ TODO							    *WriteBackup-todo*
 
 ==============================================================================
 HISTORY							 *WriteBackup-history*
+
+3.00	16-Feb-2012
+ENH: New default "redate" for g:WriteBackup_AvoidIdenticalBackups that renames
+an identical backup from an earlier date to be the first backup of today. 
+
+2.11	23-Feb-2010 (unreleased)
+Using :keepalt instead of a temporary :set cpo-=A. 
 
 2.10	27-May-2009
 Replaced simple filespec escaping with built-in fnameescape() function (or
@@ -183,7 +213,7 @@ Added documentation. First release.
 Started development. 
 
 ==============================================================================
-Copyright: (C) 2007-2009 by Ingo Karkat
+Copyright: (C) 2007-2012 Ingo Karkat
 The VIM LICENSE applies to this script; see |copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

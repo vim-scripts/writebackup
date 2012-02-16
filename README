@@ -15,6 +15,19 @@ in one common backup directory for all files (similar to Vim's 'backupdir'
 option), or even in a file-specific location that is determined via a
 user-provided callback function. 
 
+RELATED WORKS
+- The writebackupVersionControl.vim plugin (vimscript #1829) complements
+  this script with additional commands and enhances the :WriteBackup command
+  with more checks, but is not required. 
+- The writebackupToAdjacentDir.vim plugin (vimscript #3107) implements a
+  WriteBackup-dynamic-backupdir configuration that puts the backup files in
+  an adjacent backup directory if one exists. This helps where the backups
+  cannot be placed into the same directory. 
+- The writebackupAutomator.vim plugin (vimscript #3940) automatically writes
+  a backup on a day's first write of a file that was backed up in the past,
+  but not yet today. It can be your safety net when you forget to make a
+  backup. 
+
 USAGE
 :WriteBackup[!]
 			Write the whole current buffer to the next available
@@ -27,6 +40,6 @@ USAGE
 			  available (the last '.YYYYMMDDz' backup gets
 			  overwritten, even if it is readonly)
 
-PS: In addition to this Vim script, I also provide the basic writebackup
-functionality outside of Vim as VBScript and Korn Shell script versions at
+PS: In addition to this Vim plugin, I also provide the basic writebackup
+functionality outside of Vim as VBScript and Bash Shell script versions at
 http://ingo-karkat.de/downloads/tools/writebackup/index.html
